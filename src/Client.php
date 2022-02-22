@@ -141,7 +141,7 @@ class Client
             if ($this->client->errCode > 0) {
                 throw new \Exception(swoole_strerror($this->client->errCode, 9), $this->client->errCode);
             }
-            \co::sleep(1);
+            \Swoole\Coroutine::sleep(1);
             return [0, null, false, null];
         }
 

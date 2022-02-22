@@ -11,7 +11,7 @@ namespace OpenSwoole\GRPC\Exception;
 
 use OpenSwoole\GRPC\Status;
 
-class UnimplementedException extends GRPCException
+class NotFoundException extends GRPCException
 {
     protected const CODE = Status::NOT_FOUND;
 }
