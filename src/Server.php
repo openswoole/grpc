@@ -34,7 +34,7 @@ final class Server
 
     private $server;
 
-    public function __construct(string $host, int $port = 0, int $mode = \SWOOLE_PROCESS, int $sockType = \SWOOLE_SOCK_TCP)
+    public function __construct(string $host, int $port = 0, int $mode = \SWOOLE_BASE, int $sockType = \SWOOLE_SOCK_TCP)
     {
         $this->host     = $host;
         $this->port     = $port;
