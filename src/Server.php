@@ -40,6 +40,8 @@ final class Server
         $this->port     = $port;
         $this->mode     = $mode;
         $this->sockType = $sockType;
+        $server         = new \Swoole\HTTP\Server($this->host, $this->port, $this->mode, $this->sockType);
+        $this->server   = $server;
         return $this;
     }
 
@@ -51,16 +53,17 @@ final class Server
 
     public function start()
     {
-        $server   = new \Swoole\HTTP\Server($this->host, $this->port, $this->mode, $this->sockType);
-        $server->set($this->settings);
-        $server->on('request', function (\Swoole\HTTP\Request $request, \Swoole\HTTP\Response $response) {
+        $this->server->set($this->settings);
+        $this->server->on('request', function (\Swoole\HTTP\Request $request, \Swoole\HTTP\Response $response) {
             $this->process($request, $response);
         });
-        $server->on('start', function () {
-            echo "OpenSwoole GRPC Server is started grpc://{$this->host}:{$this->port}\n";
-        });
-        $this->server = $server;
-        $server->start();
+        $this->server->start();
+    }
+
+    public function on(string $event, callable $callback)
+    {
+        $this->server->on($event, function () use ($callback) { $callback->call($this); });
+        return $this;
     }
 
     public function register(string $class): self
