@@ -14,7 +14,7 @@ use OpenSwoole\GRPC\Client;
 use OpenSwoole\GRPC\ClientFactory;
 use OpenSwoole\GRPC\ClientPool;
 
-co::set(['log_level' => SWOOLE_LOG_ERROR]);
+\Swoole\Coroutine::set(['log_level' => SWOOLE_LOG_ERROR]);
 // Co::set(['log_level' => SWOOLE_LOG_DEBUG]);
 
 Co\run(function () {

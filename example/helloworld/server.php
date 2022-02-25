@@ -22,8 +22,8 @@ $server = (new Server('127.0.0.1', 9501))
     ->register(StreamService::class)
     ->withInterceptor(TraceInterceptor::class)
     ->withInterceptor(LoggingInterceptor::class)
-    ->on('start', function () {
-        echo "OpenSwoole GRPC Server is started grpc://{$this->host}:{$this->port}\n";
-    })
+    ->set([
+        'log_level' => \SWOOLE_LOG_INFO,
+    ])
     ->start()
 ;

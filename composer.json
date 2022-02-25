@@ -9,13 +9,13 @@
             "email": "hello@openswoole.com"
         }
     ],
-    "minimum-stability": "beta",
     "require": {
         "php": ">=7.4",
         "ext-openswoole": "*",
         "google/protobuf": "^3.19"
     },
     "require-dev": {
+        "openswoole/ide-helper": "~4.10.1",
         "phpunit/phpunit": "^9.5",
         "vimeo/psalm": "^4.6",
         "friendsofphp/php-cs-fixer": "^3.6"

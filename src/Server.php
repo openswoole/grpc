@@ -24,8 +24,8 @@ final class Server
     private int $sockType;
 
     private array $settings = [
-        'open_http2_protocol' => 1,
-        'enable_coroutine'    => true,
+        \Swoole\Constant::OPTION_OPEN_HTTP2_PROTOCOL => 1,
+        \Swoole\Constant::OPTION_ENABLE_COROUTINE    => true,
     ];
 
     private array $services = [];
@@ -41,6 +41,9 @@ final class Server
         $this->mode     = $mode;
         $this->sockType = $sockType;
         $server         = new \Swoole\HTTP\Server($this->host, $this->port, $this->mode, $this->sockType);
+        $server->on('start', function () {
+            \swoole_error_log(\SWOOLE_LOG_INFO, "OpenSwoole GRPC Server is started grpc://{$this->host}:{$this->port}");
+        });
         $this->server   = $server;
         return $this;
     }
@@ -60,7 +63,7 @@ final class Server
         $this->server->start();
     }
 
-    public function on(string $event, callable $callback)
+    public function on(string $event, object $callback)
     {
         $this->server->on($event, function () use ($callback) { $callback->call($this); });
         return $this;
@@ -97,13 +100,13 @@ final class Server
     public function process(\Swoole\HTTP\Request $request, \Swoole\HTTP\Response $response)
     {
         $context = new Context([
-            \OpenSwoole\GRPC\Server::class  => $this,
-            \Swoole\HTTP\Server::class      => $this->server,
-            \Swoole\Http\Request::class     => $request,
-            \Swoole\Http\Response::class    => $response,
-            'content-type'                  => $request->header['content-type'] ?? '',
-            'grpc-status'                   => Status::UNKNOWN,
-            'grpc-message'                  => '',
+            \OpenSwoole\GRPC\Server::class          => $this,
+            \Swoole\HTTP\Server::class              => $this->server,
+            \Swoole\Http\Request::class             => $request,
+            \Swoole\Http\Response::class            => $response,
+            Constant::CONTENT_TYPE                  => $request->header[Constant::CONTENT_TYPE] ?? '',
+            Constant::GRPC_STATUS                   => Status::UNKNOWN,
+            Constant::GRPC_MESSAGE                  => '',
         ]);
 
         $context->interceptors = $this->interceptors;
@@ -117,14 +120,12 @@ final class Server
 
             $responseMessage = $this->handle($service, $method, $context, $requestMessage);
 
-            $context = $context->withValue('grpc-status', Status::OK);
+            $context = $context->withValue(Constant::GRPC_STATUS, Status::OK);
         } catch (GRPCException $e) {
-            echo 'ERROR: ' . $e->getMessage() . ' Error code: ';
-            echo $e->getCode() . "\n";
-
+            \swoole_error_log(\SWOOLE_LOG_ERROR, $e->getMessage() . ', error code: ' . $e->getCode());
             $responseMessage = '';
-            $context         = $context->withValue('grpc-status', $e->getCode());
-            $context         = $context->withValue('grpc-message', $e->getMessage());
+            $context         = $context->withValue(Constant::GRPC_STATUS, $e->getCode());
+            $context         = $context->withValue(Constant::GRPC_MESSAGE, $e->getMessage());
         }
 
         $pack = $this->packResponse($context, $responseMessage);
@@ -139,8 +140,7 @@ final class Server
             }
             $response->end($pack['payload']);
         } catch (\Swoole\Exception $e) {
-            echo 'ERROR: ' . $e->getMessage() . ' Error code: ';
-            echo $e->getCode() . "\n";
+            \swoole_error_log(\SWOOLE_LOG_ERROR, $e->getMessage() . ', error code: ' . $e->getCode());
         }
     }
 
@@ -192,8 +192,8 @@ final class Server
         ];
 
         $trailers = [
-            'grpc-status'  => $context->getValue('grpc-status'),
-            'grpc-message' => $context->getValue('grpc-message'),
+            Constant::GRPC_STATUS  => $context->getValue(Constant::GRPC_STATUS),
+            Constant::GRPC_MESSAGE => $context->getValue(Constant::GRPC_MESSAGE),
         ];
 
         $payload = pack('CN', 0, strlen($payload)) . $payload;

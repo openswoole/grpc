@@ -25,12 +25,13 @@ final class ServiceContainer
             $reflection = new \ReflectionClass($interface);
 
             if (!$reflection->hasConstant('NAME')) {
+                \swoole_error_log(\SWOOLE_LOG_ERROR, "Can't find NAME of the service: {$interface}");
             }
 
             $name = $reflection->getConstant('NAME');
 
             if (!\is_string($name)) {
-                echo "Can't find NAME of the service: {$interface}\n";
+                \swoole_error_log(\SWOOLE_LOG_ERROR, "Can't find NAME of the service: {$interface}");
             }
 
             $this->name = $name;

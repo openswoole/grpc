@@ -9,10 +9,11 @@ declare(strict_types=1);
  */
 namespace OpenSwoole\GRPC;
 
-final class ClientFactory
+final class Constant
 {
-    public static function make($host, $port)
-    {
-        return new Client($host, $port);
-    }
+    public const CONTENT_TYPE = 'content-type';
+
+    public const GRPC_STATUS = 'grpc-status';
+
+    public const GRPC_MESSAGE = 'grpc-message';
 }
