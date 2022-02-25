@@ -24,6 +24,9 @@ final class Server
 
     private int $sockType;
 
+    /**
+     * @psalm-suppress UndefinedClass
+     */
     private array $settings = [
         \Swoole\Constant::OPTION_OPEN_HTTP2_PROTOCOL => 1,
         \Swoole\Constant::OPTION_ENABLE_COROUTINE    => true,
