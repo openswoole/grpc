@@ -42,7 +42,7 @@ final class Server
         $this->sockType = $sockType;
         $server         = new \Swoole\HTTP\Server($this->host, $this->port, $this->mode, $this->sockType);
         $server->on('start', function () {
-            \swoole_error_log(\SWOOLE_LOG_INFO, "OpenSwoole GRPC Server is started grpc://{$this->host}:{$this->port}");
+            \swoole_error_log(\SWOOLE_LOG_INFO, sprintf("\033[32m%s\033[0m", "OpenSwoole GRPC Server is started grpc://{$this->host}:{$this->port}"));
         });
         $this->server   = $server;
         return $this;
@@ -122,7 +122,12 @@ final class Server
 
             $context = $context->withValue(Constant::GRPC_STATUS, Status::OK);
         } catch (GRPCException $e) {
-            \swoole_error_log(\SWOOLE_LOG_ERROR, $e->getMessage() . ', error code: ' . $e->getCode());
+            \swoole_error_log(\SWOOLE_LOG_ERROR, $e->getMessage() . ', error code: ' . $e->getCode() . "\n" . $e->getTraceAsString());
+            $responseMessage = '';
+            $context         = $context->withValue(Constant::GRPC_STATUS, $e->getCode());
+            $context         = $context->withValue(Constant::GRPC_MESSAGE, $e->getMessage());
+        } catch (\Swoole\Exception $e) {
+            \swoole_error_log(\SWOOLE_LOG_WARNING, $e->getMessage() . ', error code: ' . $e->getCode() . "\n" . $e->getTraceAsString());
             $responseMessage = '';
             $context         = $context->withValue(Constant::GRPC_STATUS, $e->getCode());
             $context         = $context->withValue(Constant::GRPC_MESSAGE, $e->getMessage());
@@ -140,7 +145,7 @@ final class Server
             }
             $response->end($pack['payload']);
         } catch (\Swoole\Exception $e) {
-            \swoole_error_log(\SWOOLE_LOG_ERROR, $e->getMessage() . ', error code: ' . $e->getCode());
+            \swoole_error_log(\SWOOLE_LOG_WARNING, $e->getMessage() . ', error code: ' . $e->getCode() . "\n" . $e->getTraceAsString());
         }
     }
 
@@ -160,6 +165,8 @@ final class Server
         $result = null;
         try {
             $result = $this->invoke($service, $method, $context, $payload);
+        } catch (\Swoole\Exception $e) {
+            throw $e;
         } catch (\Throwable $e) {
             throw InvokeException::create($e->getMessage(), Status::INTERNAL, $e);
         }
