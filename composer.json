@@ -15,7 +15,7 @@
         "google/protobuf": "^3.19"
     },
     "require-dev": {
-        "openswoole/ide-helper": "~4.10.1",
+        "openswoole/ide-helper": "~4.10.2",
         "phpunit/phpunit": "^9.5",
         "vimeo/psalm": "^4.6",
         "friendsofphp/php-cs-fixer": "^3.6"
