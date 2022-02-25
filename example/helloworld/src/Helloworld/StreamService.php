@@ -23,7 +23,7 @@ class StreamService implements StreamInterface
             $out  = new HelloReply();
             $out->setMessage('hello ' . $name . time());
             $ctx->getValue(\OpenSwoole\GRPC\Server::class)->push($ctx, $out);
-            \co::sleep(1);
+            \Swoole\Coroutine::sleep(1);
         }
     }
 }
