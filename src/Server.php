@@ -9,6 +9,7 @@ declare(strict_types=1);
  */
 namespace OpenSwoole\GRPC;
 
+use Closure;
 use OpenSwoole\GRPC\Exception\GRPCException;
 use OpenSwoole\GRPC\Exception\InvokeException;
 use OpenSwoole\GRPC\Exception\NotFoundException;
@@ -63,7 +64,7 @@ final class Server
         $this->server->start();
     }
 
-    public function on(string $event, object $callback)
+    public function on(string $event, Closure $callback)
     {
         $this->server->on($event, function () use ($callback) { $callback->call($this); });
         return $this;
