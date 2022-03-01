@@ -124,14 +124,13 @@ final class Server
     {
         $context = new Context([
             'WORKER_CONTEXT'                        => $this->workerContext,
+            'INTERCEPTORS'                          => $this->interceptors,
             \Swoole\Http\Request::class             => $request,
             \Swoole\Http\Response::class            => $response,
             Constant::CONTENT_TYPE                  => $request->header[Constant::CONTENT_TYPE] ?? '',
             Constant::GRPC_STATUS                   => Status::UNKNOWN,
             Constant::GRPC_MESSAGE                  => '',
         ]);
-
-        $context->interceptors = $this->interceptors;
 
         try {
             $this->validateRequest($request);
@@ -173,12 +172,12 @@ final class Server
 
     public function handle($service, $method, $context, $requestMessage)
     {
-        if (empty($context->interceptors)) {
+        if (empty($context->getValue('INTERCEPTORS'))) {
             return $this->execute($service, $method, $context, $requestMessage);
         }
 
-        $interceptor = array_shift($context->interceptors);
-
+        $interceptor = $context->getValue('INTERCEPTORS')[0];
+        $context     = $context->withValue('INTERCEPTORS', array_slice($context->getValue('INTERCEPTORS'), 1));
         return $interceptor->handle($service, $method, $context, $requestMessage, $this);
     }
 

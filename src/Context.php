@@ -11,8 +11,6 @@ namespace OpenSwoole\GRPC;
 
 final class Context implements ContextInterface, \IteratorAggregate, \Countable, \ArrayAccess
 {
-    public $interceptors;
-
     private $values;
 
     public function __construct(array $values)
