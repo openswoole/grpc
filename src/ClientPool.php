@@ -46,16 +46,22 @@ class ClientPool
             $this->make();
         }
 
+        $this->active++;
+
         return $this->pool->pop($timeout);
     }
 
-    public function put($connection): void
+    public function put($connection, $isNew = false): void
     {
         if ($this->pool === null) {
             return;
         }
         if ($connection !== null) {
             $this->pool->push($connection);
+
+            if (!$isNew) {
+                $this->active--;
+            }
         } else {
             $this->num -= 1;
             $this->make();
@@ -68,6 +74,10 @@ class ClientPool
             return false;
         }
         while (1) {
+            if ($this->active > 0) {
+                \co::sleep(1);
+                continue;
+            }
             if (!$this->pool->isEmpty()) {
                 $client = $this->pool->pop();
                 $client->close();
@@ -85,6 +95,6 @@ class ClientPool
     {
         $this->num++;
         $client = $this->factory::make($this->config['host'], $this->config['port'])->connect();
-        $this->put($client);
+        $this->put($client, true);
     }
 }
