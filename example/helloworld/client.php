@@ -13,6 +13,7 @@ use Helloworld\HelloRequest;
 use OpenSwoole\GRPC\Client;
 use OpenSwoole\GRPC\ClientFactory;
 use OpenSwoole\GRPC\ClientPool;
+use OpenSwoole\GRPC\Constant;
 
 \Swoole\Coroutine::set(['log_level' => SWOOLE_LOG_ERROR]);
 // Co::set(['log_level' => SWOOLE_LOG_DEBUG]);
@@ -32,7 +33,7 @@ Co\run(function () {
     // server streaming grpc
 
     $conn = ClientFactory::make('127.0.0.1', 9501);
-    $conn = (new Client('127.0.0.1', 9501))->connect();
+    $conn = (new Client('127.0.0.1', 9501, Constant::GRPC_STREAM))->connect();
     $client = new Helloworld\StreamClient($conn);
     $message = new HelloRequest();
     $message->setName(str_repeat('x', 10));
@@ -137,8 +138,8 @@ Co\run(function () {
     }
 
     go(function () use ($connpool) {
-        co::sleep(10);
+        co::sleep(1);
         $connpool->close();
-        echo "DONE\n";
+        echo "CLOSE\n";
     });
 });

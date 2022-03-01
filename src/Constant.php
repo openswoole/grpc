@@ -16,4 +16,8 @@ final class Constant
     public const GRPC_STATUS = 'grpc-status';
 
     public const GRPC_MESSAGE = 'grpc-message';
+
+    public const GRPC_CALL = 1;
+
+    public const GRPC_STREAM = 2;
 }

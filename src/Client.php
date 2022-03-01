@@ -19,6 +19,8 @@ class Client
 
     private $closed = false;
 
+    private $mode;
+
     private $settings = [
         'timeout'                      => 2,
         'open_eof_check'               => true,
@@ -28,12 +30,13 @@ class Client
         'max_retries'                  => 30,
     ];
 
-    public function __construct($host, $port)
+    public function __construct($host, $port, $mode = Constant::GRPC_CALL)
     {
         $client = new \Swoole\Coroutine\Http2\Client($host, $port);
         // TODO: clientInterceptors
         $this->client  = $client;
         $this->streams = [];
+        $this->mode    = $mode;
         return $this;
     }
 
@@ -53,7 +56,7 @@ class Client
         \Swoole\Coroutine::create(function () {
             while (!$this->closed && [$streamId, $data, $pipeline, $trailers] = $this->recvData()) {
                 if ($streamId > 0 && !$pipeline) {
-                    $this->streams[$streamId][0]->push([$data,  $trailers]);
+                    $this->streams[$streamId][0]->push([$data, $trailers]);
                     $this->streams[$streamId][0]->close();
                     unset($this->streams[$streamId]);
                 } elseif ($streamId > 0) {
@@ -136,7 +139,11 @@ class Client
 
     private function recvData()
     {
-        $response = $this->client->read(30);
+        if ($this->mode === Constant::GRPC_CALL) {
+            $response = $this->client->recv(30);
+        } else {
+            $response = $this->client->read(30);
+        }
 
         if (!$response) {
             if ($this->client->errCode > 0) {
@@ -144,15 +151,6 @@ class Client
             }
             \Swoole\Coroutine::sleep(1);
             return [0, null, false, null];
-        }
-
-        // TODO: fix status may not be the next frame?
-        if ($this->streams[$response->streamId][1]) {
-            $status = $this->client->read(-1);
-            if ($response->streamId === $status->streamId) {
-                $response->headers['grpc-status']  = $status->headers['grpc-status'] ?? '0';
-                $response->headers['grpc-message'] = $status->headers['grpc-message'] ?? '';
-            }
         }
 
         if ($response && $response->data) {

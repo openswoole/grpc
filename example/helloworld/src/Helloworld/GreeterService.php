@@ -20,7 +20,7 @@ class GreeterService implements GreeterInterface
     {
         $name = $request->getName();
         $out  = new HelloReply();
-        $out->setMessage('hello ' . $name . time());
+        $out->setMessage('hello ' . $name);
 
         return $out;
     }
