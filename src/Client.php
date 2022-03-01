@@ -47,7 +47,7 @@ class Client
     {
         $this->client->set($this->settings);
         if (!$this->client->connect()) {
-            throw new ClientException(swoole_strerror($this->client->errCode, 9), $this->client->errCode);
+            throw new ClientException(swoole_strerror($this->client->errCode, 9) . " {$this->client->host}:{$this->client->port}", $this->client->errCode);
         }
 
         \Swoole\Coroutine::create(function () {
@@ -97,7 +97,7 @@ class Client
                 return $streamId;
             }
             if ($this->client->errCode > 0) {
-                throw new ClientException(swoole_strerror($this->client->errCode, 9), $this->client->errCode);
+                throw new ClientException(swoole_strerror($this->client->errCode, 9) . " {$this->client->host}:{$this->client->port}", $this->client->errCode);
             }
             \Swoole\Coroutine::usleep(10000);
         }
@@ -142,7 +142,7 @@ class Client
 
         if (!$response) {
             if ($this->client->errCode > 0) {
-                throw new ClientException(swoole_strerror($this->client->errCode, 9), $this->client->errCode);
+                throw new ClientException(swoole_strerror($this->client->errCode, 9) . " {$this->client->host}:{$this->client->port}", $this->client->errCode);
             }
             \Swoole\Coroutine::sleep(1);
             return [0, null, false, null];
