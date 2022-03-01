@@ -9,6 +9,8 @@ declare(strict_types=1);
  */
 namespace OpenSwoole\GRPC;
 
+use OpenSwoole\GRPC\Exception\GRPCException;
+
 class BaseStub
 {
     private $client;
@@ -34,7 +36,7 @@ class BaseStub
         [$data, $trailers]     = $this->client->recv($streamId);
 
         if ($trailers['grpc-status'] !== '0') {
-            throw new \Exception($trailers['grpc-message']);
+            throw new GRPCException($trailers['grpc-message']);
         }
         return $this->_deserializeResponse($deserialize, $data);
     }
