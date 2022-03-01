@@ -120,88 +120,55 @@ final class Server
         return $this;
     }
 
-    public function process(\Swoole\HTTP\Request $request, \Swoole\HTTP\Response $response)
+    public function process(\Swoole\HTTP\Request $rawRequest, \Swoole\HTTP\Response $rawResponse)
     {
         $context = new Context([
             'WORKER_CONTEXT'                        => $this->workerContext,
             'INTERCEPTORS'                          => $this->interceptors,
-            \Swoole\Http\Request::class             => $request,
-            \Swoole\Http\Response::class            => $response,
-            Constant::CONTENT_TYPE                  => $request->header[Constant::CONTENT_TYPE] ?? '',
+            \Swoole\Http\Request::class             => $rawRequest,
+            \Swoole\Http\Response::class            => $rawResponse,
+            Constant::CONTENT_TYPE                  => $rawRequest->header[Constant::CONTENT_TYPE] ?? '',
             Constant::GRPC_STATUS                   => Status::UNKNOWN,
             Constant::GRPC_MESSAGE                  => '',
         ]);
 
         try {
-            $this->validateRequest($request);
+            $this->validateRequest($rawRequest);
 
-            [, $service, $method]        = explode('/', $request->server['request_uri'] ?? '');
+            [, $service, $method]        = explode('/', $rawRequest->server['request_uri'] ?? '');
             $service                     = '/' . $service;
-            $requestMessage              = $request->getContent() ? substr($request->getContent(), 5) : '';
+            $message                     = $rawRequest->getContent() ? substr($rawRequest->getContent(), 5) : '';
 
-            $responseMessage = $this->handle($service, $method, $context, $requestMessage);
+            $request = new Request($context, $service, $method, $message);
+
+            $output = $this->handle($request);
 
             $context = $context->withValue(Constant::GRPC_STATUS, Status::OK);
         } catch (GRPCException $e) {
             \swoole_error_log(\SWOOLE_LOG_ERROR, $e->getMessage() . ', error code: ' . $e->getCode() . "\n" . $e->getTraceAsString());
-            $responseMessage = '';
+            $output          = '';
             $context         = $context->withValue(Constant::GRPC_STATUS, $e->getCode());
             $context         = $context->withValue(Constant::GRPC_MESSAGE, $e->getMessage());
         } catch (\Swoole\Exception $e) {
             \swoole_error_log(\SWOOLE_LOG_WARNING, $e->getMessage() . ', error code: ' . $e->getCode() . "\n" . $e->getTraceAsString());
-            $responseMessage = '';
+            $output          = '';
             $context         = $context->withValue(Constant::GRPC_STATUS, $e->getCode());
             $context         = $context->withValue(Constant::GRPC_MESSAGE, $e->getMessage());
         }
 
-        $pack = $this->packResponse($context, $responseMessage);
+        $response = new Response($context, $output);
 
-        try {
-            foreach ($pack['headers'] as $name => $value) {
-                $response->header($name, $value);
-            }
-
-            foreach ($pack['trailers'] as $name => $value) {
-                $response->trailer($name, (string) $value);
-            }
-            $response->end($pack['payload']);
-        } catch (\Swoole\Exception $e) {
-            \swoole_error_log(\SWOOLE_LOG_WARNING, $e->getMessage() . ', error code: ' . $e->getCode() . "\n" . $e->getTraceAsString());
-        }
+        $this->send($response);
     }
 
-    public function handle($service, $method, $context, $requestMessage)
+    public function push(Message $message)
     {
-        if (empty($context->getValue('INTERCEPTORS'))) {
-            return $this->execute($service, $method, $context, $requestMessage);
-        }
-
-        $interceptor = $context->getValue('INTERCEPTORS')[0];
-        $context     = $context->withValue('INTERCEPTORS', array_slice($context->getValue('INTERCEPTORS'), 1));
-        return $interceptor->handle($service, $method, $context, $requestMessage, $this);
-    }
-
-    public function execute($service, $method, $context = null, $payload = '')
-    {
-        $result = null;
-        try {
-            $result = $this->invoke($service, $method, $context, $payload);
-        } catch (\Swoole\Exception $e) {
-            throw $e;
-        } catch (\Throwable $e) {
-            throw InvokeException::create($e->getMessage(), Status::INTERNAL, $e);
-        }
-
-        return $result;
-    }
-
-    public function push($context, $result)
-    {
+        $context = $message->getContext();
         try {
             if ($context->getValue('content-type') !== 'application/grpc+json') {
-                $payload = $result->serializeToString();
+                $payload = $message->getMessage()->serializeToString();
             } else {
-                $payload = $result->serializeToJsonString();
+                $payload = $message->getMessage()->serializeToJsonString();
             }
         } catch (\Throwable $e) {
             throw InvokeException::create($e->getMessage(), Status::INTERNAL, $e);
@@ -212,9 +179,37 @@ final class Server
         return $context->getValue(\Swoole\Http\Response::class)->write($payload);
     }
 
-    private function packResponse(Context $context, $payload)
+    public function handle(Request $request)
     {
-        $headers = [
+        $context = $request->getContext();
+        if (empty($context->getValue('INTERCEPTORS'))) {
+            return $this->execute($request);
+        }
+
+        $interceptor = $context->getValue('INTERCEPTORS')[0];
+        $request->withContext($context->withValue('INTERCEPTORS', array_slice($context->getValue('INTERCEPTORS'), 1)));
+        return $interceptor->handle($request, $this);
+    }
+
+    public function execute(Request $request)
+    {
+        $result = null;
+        try {
+            $result = $this->invoke($request);
+        } catch (\Swoole\Exception $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            throw InvokeException::create($e->getMessage(), Status::INTERNAL, $e);
+        }
+
+        return $result;
+    }
+
+    private function send(Response $response)
+    {
+        $context     = $response->getContext();
+        $rawResponse = $context->getValue(\Swoole\Http\Response::class);
+        $headers     = [
             'content-type' => $context->getValue('content-type'),
             'trailer'      => 'grpc-status, grpc-message',
         ];
@@ -224,13 +219,20 @@ final class Server
             Constant::GRPC_MESSAGE => $context->getValue(Constant::GRPC_MESSAGE),
         ];
 
-        $payload = pack('CN', 0, strlen($payload)) . $payload;
+        $payload = pack('CN', 0, strlen($response->getPayload())) . $response->getPayload();
 
-        return [
-            'headers'  => $headers,
-            'trailers' => $trailers,
-            'payload'  => $payload,
-        ];
+        try {
+            foreach ($headers as $name => $value) {
+                $rawResponse->header($name, $value);
+            }
+
+            foreach ($trailers as $name => $value) {
+                $rawResponse->trailer($name, (string) $value);
+            }
+            $rawResponse->end($payload);
+        } catch (\Swoole\Exception $e) {
+            \swoole_error_log(\SWOOLE_LOG_WARNING, $e->getMessage() . ', error code: ' . $e->getCode() . "\n" . $e->getTraceAsString());
+        }
     }
 
     private function validateRequest(\Swoole\HTTP\Request $request)
@@ -247,11 +249,13 @@ final class Server
         }
     }
 
-    private function invoke(string $service, string $method, $context, string $payload): string
+    private function invoke(Request $request): string
     {
+        $service = $request->getService();
+        $method  = $request->getMethod();
         if (!isset($this->services[$service])) {
             throw NotFoundException::create("{$service}::{$method} not found");
         }
-        return $this->services[$service]->invoke($method, $context, $payload);
+        return $this->services[$service]->invoke($request);
     }
 }

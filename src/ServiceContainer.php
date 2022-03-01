@@ -62,8 +62,11 @@ final class ServiceContainer
         return array_values($this->methods);
     }
 
-    public function invoke(string $method, $context, ?string $input): string
+    public function invoke(Request $request): string
     {
+        $method  = $request->getMethod();
+        $context = $request->getContext();
+        $input   = $request->getPayload();
         if (!isset($this->methods[$method])) {
         }
 

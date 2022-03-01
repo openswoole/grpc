@@ -11,5 +11,5 @@ namespace OpenSwoole\GRPC;
 
 interface InterceptorInterface
 {
-    public function handle(string $service, string $method, Context $context, $request, $invoker);
+    public function handle(Request $request, $invoker);
 }

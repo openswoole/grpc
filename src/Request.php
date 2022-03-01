@@ -19,10 +19,22 @@ final class Request implements MessageInterface
 
     private string $method;
 
-    public function __construct(Context $context, string $payload)
+    public function __construct(Context $context, string $service, string $method, string $payload)
     {
+        $this->service = $service;
+        $this->method  = $method;
         $this->context = $context;
         $this->payload = $payload;
+    }
+
+    public function getService()
+    {
+        return $this->service;
+    }
+
+    public function getMethod()
+    {
+        return $this->method;
     }
 
     public function getPayload()
@@ -33,5 +45,11 @@ final class Request implements MessageInterface
     public function getContext()
     {
         return $this->context;
+    }
+
+    public function withContext(Context $context)
+    {
+        $this->context = $context;
+        return $this;
     }
 }

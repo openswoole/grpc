@@ -11,8 +11,8 @@ namespace OpenSwoole\GRPC;
 
 class TraceInterceptor implements InterceptorInterface
 {
-    public function handle(string $service, string $method, Context $context, $request, $invoker)
+    public function handle($request, $invoker)
     {
-        return $invoker->handle($service, $method, $context, $request, $invoker);
+        return $invoker->handle($request, $invoker);
     }
 }
