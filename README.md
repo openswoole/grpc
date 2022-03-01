@@ -1,6 +1,8 @@
 # OpenSwoole GRPC for PHP
 
-OpenSwoole GRPC is an open-source high-performance GRPC server for PHP. [GRPC](https://grpc.io/) is a high performance, open source universal RPC framework. OpenSwoole GRPC is a high performance integration solution for building cloud-native multiple language microservices architecture.
+OpenSwoole GRPC is an open-source high-performance GRPC solution for PHP including server side and client side implementation.
+
+[GRPC](https://grpc.io/) is a high performance, open source universal RPC framework. OpenSwoole GRPC is a high performance integration solution for building cloud-native multiple language microservices architecture.
 
 ## Features
 
