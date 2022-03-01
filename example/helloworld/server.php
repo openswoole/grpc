@@ -22,6 +22,9 @@ $server = (new Server('127.0.0.1', 9501))
     ->register(StreamService::class)
     ->withInterceptor(TraceInterceptor::class)
     ->withInterceptor(LoggingInterceptor::class)
+    ->withWorkerContext('worker_start_time', function () {
+        return time();
+    })
     ->set([
         'log_level' => \SWOOLE_LOG_INFO,
     ])

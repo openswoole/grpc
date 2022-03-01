@@ -36,7 +36,11 @@ final class Server
 
     private array $interceptors = [];
 
+    private array $workerContexts = [];
+
     private $server;
+
+    private $workerContext;
 
     public function __construct(string $host, int $port = 0, int $mode = \SWOOLE_BASE, int $sockType = \SWOOLE_SOCK_TCP)
     {
@@ -52,6 +56,12 @@ final class Server
         return $this;
     }
 
+    public function withWorkerContext(string $context, Closure $callback): self
+    {
+        $this->workerContexts[$context] = $callback;
+        return $this;
+    }
+
     public function set(array $settings): self
     {
         $this->settings = array_merge($this->settings, $settings ?? []);
@@ -61,6 +71,15 @@ final class Server
     public function start()
     {
         $this->server->set($this->settings);
+        $this->server->on('workerStart', function (\Swoole\Server $server, int $workerId) {
+            $this->workerContext = new Context([
+                \OpenSwoole\GRPC\Server::class          => $this,
+                \Swoole\HTTP\Server::class              => $this->server,
+            ]);
+            foreach ($this->workerContexts as $context => $callback) {
+                $this->workerContext = $this->workerContext->withValue($context, $callback->call($this));
+            }
+        });
         $this->server->on('request', function (\Swoole\HTTP\Request $request, \Swoole\HTTP\Response $response) {
             $this->process($request, $response);
         });
@@ -76,11 +95,11 @@ final class Server
     public function register(string $class): self
     {
         if (!class_exists($class)) {
-            throw new \Exception("{$class} not found");
+            throw new \TypeError("{$class} not found");
         }
         $instance = new $class();
         if (!($instance instanceof ServiceInterface)) {
-            throw new \Exception("{$class} is not ServiceInterface");
+            throw new \TypeError("{$class} is not ServiceInterface");
         }
         $service                             = new ServiceContainer($class, $instance);
         $this->services[$service->getName()] = $service;
@@ -90,11 +109,11 @@ final class Server
     public function withInterceptor(string $interceptor): self
     {
         if (!class_exists($interceptor)) {
-            throw new \Exception("{$interceptor} not found");
+            throw new \TypeError("{$interceptor} not found");
         }
         $instance = new $interceptor();
         if (!($instance instanceof InterceptorInterface)) {
-            throw new \Exception("{$interceptor} is not ServiceInterface");
+            throw new \TypeError("{$interceptor} is not ServiceInterface");
         }
 
         $this->interceptors[] = $instance;
@@ -104,8 +123,7 @@ final class Server
     public function process(\Swoole\HTTP\Request $request, \Swoole\HTTP\Response $response)
     {
         $context = new Context([
-            \OpenSwoole\GRPC\Server::class          => $this,
-            \Swoole\HTTP\Server::class              => $this->server,
+            'WORKER_CONTEXT'                        => $this->workerContext,
             \Swoole\Http\Request::class             => $request,
             \Swoole\Http\Response::class            => $response,
             Constant::CONTENT_TYPE                  => $request->header[Constant::CONTENT_TYPE] ?? '',

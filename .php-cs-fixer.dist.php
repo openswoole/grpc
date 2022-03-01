@@ -59,5 +59,8 @@ return (new PhpCsFixer\Config())
         'standardize_not_equals'                 => true,
         'yoda_style'                             => ['always_move_variable' => false, 'equal' => false, 'identical' => false],
     ])
-    ->setFinder(PhpCsFixer\Finder::create()->in(__DIR__ . '/src'))
+    ->setFinder(PhpCsFixer\Finder::create()->in([
+        __DIR__ . '/src',
+        __DIR__ . '/example'
+    ]))
     ->setUsingCache(false);
