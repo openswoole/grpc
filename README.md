@@ -16,4 +16,4 @@ OpenSwoole GRPC is an open-source high-performance GRPC solution for PHP includi
 
 ## License
 
-OpenSwoole GRPC is open-sourced software licensed under the [Apache 2.0 license](http://www.apache.org/licenses/LICENSE-2.0.html).
+OpenSwoole GRPC is open-sourced software licensed under the [Apache 2.0 license](https://github.com/openswoole/grpc/blob/main/LICENSE).
