@@ -1,6 +1,6 @@
 {
     "name": "openswoole/grpc",
-    "description": "OpenSwoole RPC framework for building high performance services",
+    "description": "OpenSwoole GRPC framework for building high performance services",
     "type": "library",
     "license": "Apache 2.0",
     "authors": [
@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": ">=7.4",
-        "ext-openswoole": "*",
+        "ext-openswoole": "^4.10",
         "google/protobuf": "^3.19"
     },
     "require-dev": {

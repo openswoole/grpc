@@ -60,7 +60,7 @@ class BaseStub
         array $metadata = []
     ) {
         $this->deserialize = $deserialize;
-        $streamId          = $this->client->send($method, $request, 'proto', false);
+        $streamId          = $this->client->send($method, $request);
         [$data,]           = $this->client->recv($streamId);
 
         $this->streamId    = $streamId;

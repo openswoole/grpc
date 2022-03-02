@@ -11,7 +11,7 @@ namespace OpenSwoole\GRPC;
 
 use OpenSwoole\GRPC\Exception\ClientException;
 
-class Client
+class Client implements ClientInterface
 {
     private $client;
 
@@ -22,12 +22,12 @@ class Client
     private $mode;
 
     private $settings = [
-        'timeout'                      => 2,
+        'timeout'                      => 3,
         'open_eof_check'               => true,
-        'package_max_length'           => 2000000,
+        'package_max_length'           => 2 * 1024 * 1024,
         'http2_max_concurrent_streams' => 1000,
         'http2_max_frame_size'         => 2 * 1024 * 1024,
-        'max_retries'                  => 30,
+        'max_retries'                  => 10,
     ];
 
     public function __construct($host, $port, $mode = Constant::GRPC_CALL)
@@ -46,7 +46,10 @@ class Client
         return $this;
     }
 
-    public function connect()
+    /**
+     * Esbalish a connection to the remote endpoint
+     */
+    public function connect(): self
     {
         $this->client->set($this->settings);
         if (!$this->client->connect()) {
@@ -67,34 +70,37 @@ class Client
         return $this;
     }
 
-    public function stats()
+    /**
+     * Get the stats of the client
+     */
+    public function stats(): array
     {
         return $this->client->stats();
     }
 
+    /**
+     * Close the connection to the remote endpoint
+     */
     public function close()
     {
         $this->closed = true;
         $this->client->close();
     }
 
-    public function recv($streamId, $timeout = -1)
+    /**
+     * Send message to remote endpoint, either end the stream or not depending on $mode of the client
+     * @param mixed $method
+     * @param mixed $message
+     * @param mixed $type
+     */
+    public function send($method, $message, $type = 'proto')
     {
-        return $this->streams[$streamId][0]->pop($timeout);
-    }
-
-    public function sendPacket($streamId, $message, $type = 'proto', $end = false)
-    {
-        return $this->sendStreamPacket($streamId, $message, $type, $end);
-    }
-
-    public function send($method, $message, $type = 'proto', $end = true)
-    {
-        $retry = 0;
+        $isEndStream = $this->mode === Constant::GRPC_CALL;
+        $retry       = 0;
         while ($retry++ < $this->settings['max_retries']) {
-            $streamId = $this->sendMessage($method, $message, $type, $end);
+            $streamId = $this->sendMessage($method, $message, $type);
             if ($streamId && $streamId > 0) {
-                $this->streams[$streamId] = [new \Swoole\Coroutine\Channel(1), $end];
+                $this->streams[$streamId] = [new \Swoole\Coroutine\Channel(1), $isEndStream];
                 return $streamId;
             }
             if ($this->client->errCode > 0) {
@@ -105,7 +111,24 @@ class Client
         return false;
     }
 
-    private function sendStreamPacket($streamId, $message, $type, $end = false)
+    /**
+     * Receive the data from a stream in the established connection based on streamId.
+     * @param mixed $streamId
+     * @param mixed $timeout
+     */
+    public function recv($streamId, $timeout = -1)
+    {
+        return $this->streams[$streamId][0]->pop($timeout);
+    }
+
+    /**
+     * Push message to the remote endpoint, used in client side streaming mode.
+     * @param mixed $streamId
+     * @param mixed $message
+     * @param mixed $type
+     * @param bool $end
+     */
+    public function push($streamId, $message, $type = 'proto', $end = false)
     {
         if ($type === 'proto') {
             $payload = $message->serializeToString();
@@ -116,7 +139,7 @@ class Client
         return $this->client->write($streamId, $payload, $end);
     }
 
-    private function sendMessage($method, $message, $type, $end = true)
+    private function sendMessage($method, $message, $type)
     {
         $request           = new \Swoole\Http2\Request();
         $request->pipeline = false;

@@ -9,7 +9,7 @@ OpenSwoole GRPC is an open-source high-performance GRPC solution for PHP includi
 * Native GRPC implementation compliant
 * PHP/PHP-FPM GRPC client compliant
 * [OpenSwoole GRPC PHP stub code generator](https://github.com/openswoole/protoc-gen-openswoole-grpc) provided
-* GRPC Unary mode support
+* GRPC unary mode support
 * GRPC server side stream mode
 * GRPC Server side interceptors
 * GRPC Client side connection pooling and multiplexing
