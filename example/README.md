@@ -3,6 +3,7 @@
 ## Prerequisites
 
 * PHP and Composer
+* Open Swoole
 * Open Swoole GRPC
 * Open Swoole GRPC Compiler
 * google/protobuf or ext-protobuf (Optional)
