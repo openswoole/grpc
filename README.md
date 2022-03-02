@@ -14,6 +14,17 @@ OpenSwoole GRPC is an open-source high-performance GRPC solution for PHP includi
 * GRPC Server side interceptors
 * GRPC Client side connection pooling and multiplexing
 
+## Example
+
+You can find example helloworld project at [/example].
+
+## Next steps:
+
+1. Create `.proto` for your service
+2. Generate PHP stub codes with Open Swoole GRPC Compiler
+3. Implement your own service
+4. Integrate with GRPC service with GRPC client
+
 ## License
 
 OpenSwoole GRPC is open-sourced software licensed under the [Apache 2.0 license](https://github.com/openswoole/grpc/blob/main/LICENSE).
