@@ -16,6 +16,8 @@ composer install
 php server.php
 # run client
 php simple_client.php
+# run golang client
+go run client.go
 ```
 
 ## Examples:
