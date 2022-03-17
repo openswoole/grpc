@@ -16,12 +16,12 @@ use OpenSwoole\GRPC\Client;
 // Co::set(['log_level' => SWOOLE_LOG_DEBUG]);
 
 Co\run(function () {
-    $conn = (new Client('127.0.0.1', 9501))->connect();
-    $method = '/helloworld.Greeter/SayHello';
+    $conn    = (new Client('127.0.0.1', 9501))->connect();
+    $method  = '/helloworld.Greeter/SayHello';
     $message = new HelloRequest();
     $message->setName(str_repeat('x', 100));
     $streamId = $conn->send($method, $message);
-    $data = $conn->recv($streamId);
+    $data     = $conn->recv($streamId);
     var_dump($data);
     $conn->close();
     echo "closed\n";

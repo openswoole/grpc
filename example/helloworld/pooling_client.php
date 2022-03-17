@@ -18,9 +18,9 @@ use OpenSwoole\GRPC\ClientPool;
 
 Co\run(function () {
     $connpool = new ClientPool(ClientFactory::class, ['host' => '127.0.0.1', 'port' => 9501], 16);
-    $now = microtime(true);
-    $i = 16;
-    $total = 100_000;
+    $now      = microtime(true);
+    $i        = 16;
+    $total    = 100_000;
 
     while ($i-- > 0) {
         $conn = $connpool->get();

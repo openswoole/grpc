@@ -17,7 +17,7 @@ use OpenSwoole\GRPC\Client;
 
 Co\run(function () {
     // client side stream push
-    $conn = (new Client('127.0.0.1', 9501))->connect();
+    $conn   = (new Client('127.0.0.1', 9501))->connect();
     $method = '/helloworld.Greeter/SayHello';
 
     $message = new HelloRequest();

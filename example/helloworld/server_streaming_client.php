@@ -19,9 +19,9 @@ use OpenSwoole\GRPC\Constant;
 
 Co\run(function () {
     // server streaming
-    $conn = ClientFactory::make('127.0.0.1', 9501);
-    $conn = (new Client('127.0.0.1', 9501, Constant::GRPC_STREAM))->connect();
-    $client = new Helloworld\StreamClient($conn);
+    $conn    = ClientFactory::make('127.0.0.1', 9501);
+    $conn    = (new Client('127.0.0.1', 9501, Constant::GRPC_STREAM))->connect();
+    $client  = new Helloworld\StreamClient($conn);
     $message = new HelloRequest();
     $message->setName(str_repeat('x', 10));
 

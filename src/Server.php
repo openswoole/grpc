@@ -176,7 +176,11 @@ final class Server
 
         $payload = pack('CN', 0, strlen($payload)) . $payload;
 
-        return $context->getValue(\Swoole\Http\Response::class)->write($payload);
+        $ret = $context->getValue(\Swoole\Http\Response::class)->write($payload);
+        if (!$ret) {
+            throw new \Swoole\Exception('Client side is disconnected');
+        }
+        return $ret;
     }
 
     public function handle(Request $request)

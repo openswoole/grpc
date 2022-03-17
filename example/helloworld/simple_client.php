@@ -16,8 +16,8 @@ use OpenSwoole\GRPC\Client;
 // Co::set(['log_level' => SWOOLE_LOG_DEBUG]);
 
 Co\run(function () {
-    $conn = (new Client('127.0.0.1', 9501))->connect();
-    $client = new Helloworld\GreeterClient($conn);
+    $conn    = (new Client('127.0.0.1', 9501))->connect();
+    $client  = new Helloworld\GreeterClient($conn);
     $message = new HelloRequest();
     $message->setName(str_repeat('x', 10));
     $out = $client->sayHello($message);
