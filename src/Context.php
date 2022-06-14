@@ -42,7 +42,7 @@ final class Context implements ContextInterface, \IteratorAggregate, \Countable,
         return isset($this->values[$offset]) || \array_key_exists($offset, $this->values);
     }
 
-    public function offsetGet($offset)
+    public function offsetGet($offset): mixed
     {
         assert(\is_string($offset), 'Offset argument must be a type of string');
 
