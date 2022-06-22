@@ -1,5 +1,5 @@
 {
-    "name": "openswoole/grpc",
+    "name": "swoole/grpc",
     "description": "OpenSwoole GRPC framework for building high performance services",
     "type": "library",
     "license": "Apache 2.0",
