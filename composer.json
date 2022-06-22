@@ -11,7 +11,7 @@
     ],
     "require": {
         "php": ">=7.4",
-        "ext-swoole": "^4.10",
+        "ext-swoole": "^4.8",
         "google/protobuf": "^3.19"
     },
     "require-dev": {
