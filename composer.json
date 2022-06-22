@@ -11,11 +11,11 @@
     ],
     "require": {
         "php": ">=7.4",
-        "ext-openswoole": "^4.10",
+        "ext-swoole": "^4.10",
         "google/protobuf": "^3.19"
     },
     "require-dev": {
-        "openswoole/ide-helper": "~4.10.2",
+        "swoole/ide-helper": "~4.10.2",
         "phpunit/phpunit": "^9.5",
         "vimeo/psalm": "^4.6",
         "friendsofphp/php-cs-fixer": "^3.6"
