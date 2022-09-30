@@ -8,7 +8,6 @@ declare(strict_types=1);
  */
 namespace OpenSwoole\GRPC;
 
-interface InterceptorInterface
+interface RequestHandlerInterface
 {
-    public function handle(Request $request, $invoker);
 }
