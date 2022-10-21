@@ -177,8 +177,8 @@ class Client implements ClientInterface
             return [0, null, false, null];
         }
 
-        if ($response && $response->data) {
-            $data     = substr($response->data, 5);
+        if ($response) {
+            $data     = $response->data ? substr($response->data, 5) : '';
             $trailers = ['grpc-status' => $response->headers['grpc-status'] ?? '0', 'grpc-message' => $response->headers['grpc-message'] ?? ''];
 
             return [$response->streamId, $data, $response->pipeline, $trailers];
